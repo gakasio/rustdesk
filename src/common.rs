@@ -2080,7 +2080,39 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
     ThrottledInterval::new(i)
 }
 
+// Bakes in the default connection settings for this custom gakasio.kz build,
+// so a fresh install shows the ID/Relay/API server fields pre-filled and
+// WebSocket already enabled, instead of relying only on the compiled-in
+// RENDEZVOUS_SERVERS/RS_PUB_KEY constants (hbb_common/src/config.rs) working
+// silently while the UI shows blank fields. These are DEFAULT_SETTINGS, not
+// HARD_SETTINGS, so a user (or a future custom.txt) can still override them.
+//
+// To rebuild for a different server/domain/key: update these four values plus
+// RENDEZVOUS_SERVERS/RS_PUB_KEY in hbb_common/src/config.rs (see
+// rustdesk/BUILD_CLIENT.md in the RemSupport repo for the full rebuild guide).
+pub fn set_gakasio_default_settings() {
+    let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
+    defaults.insert(
+        config::keys::OPTION_CUSTOM_RENDEZVOUS_SERVER.to_owned(),
+        "rustdesk.gakasio.kz".to_owned(),
+    );
+    defaults.insert(
+        config::keys::OPTION_RELAY_SERVER.to_owned(),
+        "rustdesk.gakasio.kz".to_owned(),
+    );
+    defaults.insert(
+        config::keys::OPTION_API_SERVER.to_owned(),
+        "https://rustdesk.gakasio.kz".to_owned(),
+    );
+    defaults.insert(
+        config::keys::OPTION_KEY.to_owned(),
+        "p0sJYexlXq1GhQejP0rHwvVPgasV604zWDvGMFoSLOk=".to_owned(),
+    );
+    defaults.insert(config::keys::OPTION_ALLOW_WEBSOCKET.to_owned(), "Y".to_owned());
+}
+
 pub fn load_custom_client() {
+    set_gakasio_default_settings();
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
         read_custom_client(data.trim());
